@@ -36,6 +36,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const completedTasksListArea = document.getElementById('completed-tasks-list');
     const deletedTasksListArea = document.getElementById('deleted-tasks-list');
 
+    // Task Detail Popup Elements
+    const taskDetailPopup = document.getElementById('task-detail-popup');
+    const closeTaskDetailPopupBtn = document.getElementById('close-task-detail-popup-btn');
+    const detailTaskName = document.getElementById('detail-task-name');
+    const detailTaskDetail = document.getElementById('detail-task-detail');
+    const detailTaskLimitDate = document.getElementById('detail-task-limit-date');
+    const detailTaskScheduledStartDate = document.getElementById('detail-task-scheduled-start-date');
+    const detailTaskScheduledEndDate = document.getElementById('detail-task-scheduled-end-date');
+    const detailTaskActualStartDate = document.getElementById('detail-task-actual-start-date');
+    const detailTaskActualEndDate = document.getElementById('detail-task-actual-end-date');
+    const detailTaskStatus = document.getElementById('detail-task-status');
+    const detailTaskDeleteReasonContainer = document.getElementById('delete-reason-container');
+    const detailTaskDeleteReason = document.getElementById('detail-task-delete-reason');
+
+
     // --- Global State Variables ---
     let currentEditTaskDetails = null; // Stores the full details of the task being edited
     let sortableInstance = null;      // To keep track of the SortableJS instance for active tasks
@@ -67,7 +82,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (popupElement) popupElement.style.display = 'none';
         if (addTaskPopup.style.display === 'none' &&
             editTaskPopup.style.display === 'none' &&
-            deleteConfirmPopup.style.display === 'none') {
+            deleteConfirmPopup.style.display === 'none' &&
+            (taskDetailPopup ? taskDetailPopup.style.display === 'none' : true)) { // Check if taskDetailPopup is defined and hidden
             if (popupOverlay) popupOverlay.style.display = 'none';
         }
     }
@@ -111,6 +127,33 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     function hideDeleteConfirmPopup() {
         hidePopup(deleteConfirmPopup);
+    }
+
+    function showTaskDetailPopup(taskDetails) {
+        if (!taskDetails) return;
+
+        detailTaskName.textContent = taskDetails.name || 'N/A';
+        detailTaskDetail.textContent = (taskDetails.detail && taskDetails.detail.trim() !== "") ? taskDetails.detail : 'N/A';
+        detailTaskLimitDate.textContent = taskDetails.limit_date ? new Date(taskDetails.limit_date).toLocaleString() : 'N/A';
+        detailTaskScheduledStartDate.textContent = taskDetails.scheduled_start_date ? new Date(taskDetails.scheduled_start_date).toLocaleString() : 'N/A';
+        detailTaskScheduledEndDate.textContent = taskDetails.scheduled_end_date ? new Date(taskDetails.scheduled_end_date).toLocaleString() : 'N/A';
+        detailTaskActualStartDate.textContent = taskDetails.actual_start_date ? new Date(taskDetails.actual_start_date).toLocaleString() : 'N/A';
+        detailTaskActualEndDate.textContent = taskDetails.actual_end_date ? new Date(taskDetails.actual_end_date).toLocaleString() : 'N/A';
+        detailTaskStatus.textContent = taskDetails.status || 'N/A';
+
+        if (taskDetails.delete_reason) {
+            detailTaskDeleteReason.textContent = taskDetails.delete_reason;
+            detailTaskDeleteReasonContainer.style.display = 'block';
+        } else {
+            detailTaskDeleteReason.textContent = '';
+            detailTaskDeleteReasonContainer.style.display = 'none';
+        }
+
+        showPopup(taskDetailPopup, null, null); // No error div or form to reset for this popup
+    }
+
+    function hideTaskDetailPopup() {
+        hidePopup(taskDetailPopup);
     }
     // --- End Popup Management ---
 
@@ -284,6 +327,10 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const textSpan = document.createElement('span');
             textSpan.textContent = `${task.name} (Completed: ${new Date(task.actual_end_date).toLocaleDateString()})`;
+            textSpan.style.cursor = 'pointer';
+            textSpan.addEventListener('click', () => {
+                showTaskDetailPopup(task);
+            });
             
             const restoreBtn = document.createElement('button');
             restoreBtn.className = 'restore-btn'; 
@@ -315,6 +362,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 text += ` - Reason: ${task.delete_reason}`;
             }
             textSpan.textContent = text;
+            textSpan.style.cursor = 'pointer';
+            textSpan.addEventListener('click', () => {
+                showTaskDetailPopup(task);
+            });
 
             const restoreBtn = document.createElement('button');
             restoreBtn.className = 'restore-btn'; 
@@ -571,6 +622,7 @@ document.addEventListener('DOMContentLoaded', function() {
     cancelAddTaskBtn.addEventListener('click', hideAddTaskPopup);
     cancelEditTaskBtn.addEventListener('click', hideEditTaskPopup);
     cancelDeleteConfirmBtn.addEventListener('click', hideDeleteConfirmPopup);
+    if(closeTaskDetailPopupBtn) closeTaskDetailPopupBtn.addEventListener('click', hideTaskDetailPopup);
     
     deleteFromEditBtn.addEventListener('click', () => {
         const taskId = editTaskIdInput.value;
@@ -641,6 +693,9 @@ document.addEventListener('DOMContentLoaded', function() {
             hideAddTaskPopup();
             hideEditTaskPopup();
             hideDeleteConfirmPopup();
+            if (taskDetailPopup && taskDetailPopup.style.display !== 'none') {
+                hideTaskDetailPopup();
+            }
         });
     }
 

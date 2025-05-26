@@ -134,6 +134,21 @@
             <button type="button" id="cancel-delete-confirm-btn">Cancel</button>
         </form>
     </div>
+
+    <!-- Task Detail Display Popup -->
+    <div id="task-detail-popup" class="popup">
+        <h3>Task Details</h3>
+        <p><strong>Name:</strong> <span id="detail-task-name"></span></p>
+        <p><strong>Detail:</strong> <span id="detail-task-detail"></span></p>
+        <p><strong>Limit Date:</strong> <span id="detail-task-limit-date"></span></p>
+        <p><strong>Scheduled Start:</strong> <span id="detail-task-scheduled-start-date"></span></p>
+        <p><strong>Scheduled End:</strong> <span id="detail-task-scheduled-end-date"></span></p>
+        <p><strong>Actual Start:</strong> <span id="detail-task-actual-start-date"></span></p>
+        <p><strong>Actual End:</strong> <span id="detail-task-actual-end-date"></span></p>
+        <p><strong>Status:</strong> <span id="detail-task-status"></span></p>
+        <p id="delete-reason-container" style="display:none;"><strong>Delete Reason:</strong> <span id="detail-task-delete-reason"></span></p>
+        <button type="button" id="close-task-detail-popup-btn">Close</button>
+    </div>
     <!-- Frappe Gantt JS -->
     <script src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
     <script src="{{ url_for('static', filename='main.js') }}"></script></body>
