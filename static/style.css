@@ -332,3 +332,86 @@ button[type="button"]:hover:not(:disabled) {
 .task-list-condensed .restore-btn:hover {
     background-color: #218838;
 }
+
+/* Styling for View Task Info Popup */
+#view-task-info-popup .popup-body p {
+    margin: 8px 0;
+    font-size: 0.95em;
+}
+
+#view-task-info-popup .popup-body p strong {
+    display: inline-block;
+    width: 150px; /* Adjust as needed for alignment */
+    color: #555;
+}
+
+#view-task-info-popup .popup-body p small {
+    font-size: 0.85em;
+    color: #777;
+}
+
+#view-task-info-popup .popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+#view-task-info-popup .popup-header h3 {
+    margin: 0; /* Reset margin for h3 inside flex */
+}
+
+#view-task-info-popup .popup-footer {
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+    margin-top: 20px;
+    text-align: right;
+}
+
+.close-popup-btn { /* General style for 'x' close buttons */
+    background: none;
+    border: none;
+    font-size: 1.5em;
+    color: #aaa;
+    cursor: pointer;
+    padding: 0 5px;
+}
+.close-popup-btn:hover {
+    color: #777;
+}
+
+
+/* Make completed/deleted task list items clickable */
+.task-list-condensed .view-task-details {
+    cursor: pointer;
+}
+
+.task-list-condensed .view-task-details:hover {
+    background-color: #f0f0f0; /* Slight hover effect for the list item */
+}
+
+/* Styling for "doing" (started) tasks in the active list */
+#active-tasks-ul .task-item.task-status-doing {
+    background-color: #FFA500; /* Orange */
+    color: white; /* Ensure text is readable on orange */
+    border-left-color: #cc8400; /* Darker orange for the left border */
+}
+
+#active-tasks-ul .task-item.task-status-doing:hover {
+    background-color: #cc8400; /* Darker orange for hover */
+    color: white;
+}
+
+/* Styling for "doing" (started) tasks in the Gantt chart */
+/* Frappe Gantt adds the custom_class to the <g class="bar-wrapper"> element.
+   The actual visual bar is a <rect class="bar"> inside it. */
+.gantt-bar-doing .bar {
+    fill: #FFA500 !important; /* Orange. !important might be needed. */
+}
+
+/* If you want the label text for "doing" tasks in Gantt to also change: */
+.gantt-bar-doing ~ .bar-label { /* This selector might need adjustment based on Frappe Gantt's DOM */
+    /* fill: white !important; */ /* Example: make text white */
+}

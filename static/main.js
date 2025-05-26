@@ -36,6 +36,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const completedTasksListArea = document.getElementById('completed-tasks-list');
     const deletedTasksListArea = document.getElementById('deleted-tasks-list');
 
+    // View Task Info Popup Elements
+    const viewTaskInfoPopup = document.getElementById('view-task-info-popup');
+    const viewInfoName = document.getElementById('view-info-name');
+    const viewInfoDetail = document.getElementById('view-info-detail');
+    const viewInfoStatus = document.getElementById('view-info-status');
+    const viewInfoLimitDate = document.getElementById('view-info-limit-date');
+    const viewInfoScheduledStart = document.getElementById('view-info-scheduled-start');
+    const viewInfoScheduledEnd = document.getElementById('view-info-scheduled-end');
+    const viewInfoActualStart = document.getElementById('view-info-actual-start');
+    const viewInfoActualEnd = document.getElementById('view-info-actual-end');
+    const viewInfoDeleteReasonContainer = document.getElementById('view-info-delete-reason-container');
+    const viewInfoDeleteReason = document.getElementById('view-info-delete-reason');
+    const viewInfoCreatedAt = document.getElementById('view-info-created-at');
+    const viewInfoUpdatedAt = document.getElementById('view-info-updated-at');
+    const closeViewInfoPopupBtn = document.getElementById('close-view-info-popup-btn');
+
+
     // --- Global State Variables ---
     let currentEditTaskDetails = null; // Stores the full details of the task being edited
     let sortableInstance = null;      // To keep track of the SortableJS instance for active tasks
@@ -55,6 +72,11 @@ document.addEventListener('DOMContentLoaded', function() {
         return isoString.substring(0, 16);
     }
 
+    function formatDateTimeForDisplay(isoString) {
+        if (!isoString) return "N/A";
+        return new Date(isoString).toLocaleString();
+    }
+
     // --- Popup Management ---
     function showPopup(popupElement, errorDivElement, formElement) {
         if (popupElement) popupElement.style.display = 'block';
@@ -67,7 +89,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (popupElement) popupElement.style.display = 'none';
         if (addTaskPopup.style.display === 'none' &&
             editTaskPopup.style.display === 'none' &&
-            deleteConfirmPopup.style.display === 'none') {
+            deleteConfirmPopup.style.display === 'none' &&
+            viewTaskInfoPopup.style.display === 'none') { // Added viewTaskInfoPopup check
             if (popupOverlay) popupOverlay.style.display = 'none';
         }
     }
@@ -112,6 +135,35 @@ document.addEventListener('DOMContentLoaded', function() {
     function hideDeleteConfirmPopup() {
         hidePopup(deleteConfirmPopup);
     }
+
+    // View Task Info Popup
+    function populateViewTaskInfoPopup(taskDetails) {
+        viewInfoName.textContent = taskDetails.name || "Task Details";
+        viewInfoDetail.textContent = taskDetails.detail || "N/A";
+        viewInfoStatus.textContent = taskDetails.status || "N/A";
+        viewInfoLimitDate.textContent = formatDateTimeForDisplay(taskDetails.limit_date);
+        viewInfoScheduledStart.textContent = formatDateTimeForDisplay(taskDetails.scheduled_start_date);
+        viewInfoScheduledEnd.textContent = formatDateTimeForDisplay(taskDetails.scheduled_end_date);
+        viewInfoActualStart.textContent = formatDateTimeForDisplay(taskDetails.actual_start_date);
+        viewInfoActualEnd.textContent = formatDateTimeForDisplay(taskDetails.actual_end_date);
+        
+        if (taskDetails.delete_reason) {
+            viewInfoDeleteReason.textContent = taskDetails.delete_reason;
+            viewInfoDeleteReasonContainer.style.display = 'block';
+        } else {
+            viewInfoDeleteReason.textContent = "N/A";
+            viewInfoDeleteReasonContainer.style.display = 'none';
+        }
+        viewInfoCreatedAt.textContent = formatDateTimeForDisplay(taskDetails.created_at);
+        viewInfoUpdatedAt.textContent = formatDateTimeForDisplay(taskDetails.updated_at);
+    }
+
+    function showViewTaskInfoPopup() {
+        showPopup(viewTaskInfoPopup, null, null); // No error div or form to reset for this one
+    }
+    function hideViewTaskInfoPopup() {
+        hidePopup(viewTaskInfoPopup);
+    }
     // --- End Popup Management ---
 
     // --- Task Rendering Functions ---
@@ -141,9 +193,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
         tasks.forEach(task => {
             const li = document.createElement('li');
-            li.className = 'task-item';
+            const li = document.createElement('li');
+            li.className = 'task-item'; // Base class
             li.dataset.taskId = task.id; 
             li.id = `task-item-${task.id}`;
+
+            // Add status-specific class
+            if (task.status === 'doing') {
+                li.classList.add('task-status-doing');
+            }
+            // Potentially: else if (task.status === 'todo') { li.classList.add('task-status-todo'); }
 
             const nameDiv = document.createElement('div');
             nameDiv.className = 'task-name';
@@ -192,10 +251,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const endDate = task.scheduled_end_date.split('T')[0];
             
             let progress = 0;
+            let custom_class = ''; // Default no custom class
+
             if (task.status === 'completed' || task.actual_end_date) {
                 progress = 100;
+                // custom_class = 'gantt-bar-completed'; // Example for other statuses
             } else if (task.status === 'doing' || task.actual_start_date) {
-                progress = 50; 
+                progress = 50; // Arbitrary progress for 'doing' tasks
+                custom_class = 'gantt-bar-doing'; // Apply custom class for 'doing' tasks
+            } else {
+                progress = 0; // For 'todo' tasks
+                // custom_class = 'gantt-bar-todo'; // Example for other statuses
             }
 
             return {
@@ -204,7 +270,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 start: startDate,
                 end: endDate,
                 progress: progress,
-                dependencies: '' 
+                dependencies: '',
+                custom_class: custom_class // Add custom_class to task data
             };
         });
 
@@ -284,14 +351,15 @@ document.addEventListener('DOMContentLoaded', function() {
         ul.className = 'task-list-condensed';
         tasks.forEach(task => {
             const li = document.createElement('li');
-            li.className = 'task-item-condensed';
-            
+            li.className = 'task-item-condensed view-task-details'; // Added class
+            li.dataset.taskId = task.id; // Set dataset for click handling
+
             const textSpan = document.createElement('span');
             textSpan.textContent = `${task.name} (Completed: ${new Date(task.actual_end_date).toLocaleDateString()})`;
             
             const restoreBtn = document.createElement('button');
             restoreBtn.className = 'restore-btn'; 
-            restoreBtn.dataset.taskId = task.id;
+            restoreBtn.dataset.taskId = task.id; // Keep task ID on button for restore logic
             restoreBtn.textContent = 'Restore';
             
             li.appendChild(textSpan);
@@ -311,7 +379,8 @@ document.addEventListener('DOMContentLoaded', function() {
         ul.className = 'task-list-condensed';
         tasks.forEach(task => {
             const li = document.createElement('li');
-            li.className = 'task-item-condensed';
+            li.className = 'task-item-condensed view-task-details'; // Added class
+            li.dataset.taskId = task.id; // Set dataset for click handling
             
             const textSpan = document.createElement('span');
             let text = `${task.name} (Deleted: ${new Date(task.updated_at).toLocaleDateString()})`;
@@ -322,7 +391,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const restoreBtn = document.createElement('button');
             restoreBtn.className = 'restore-btn'; 
-            restoreBtn.dataset.taskId = task.id;
+            restoreBtn.dataset.taskId = task.id; // Keep task ID on button for restore logic
             restoreBtn.textContent = 'Restore';
 
             li.appendChild(textSpan);

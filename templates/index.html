@@ -136,5 +136,31 @@
     </div>
     <!-- Frappe Gantt JS -->
     <script src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
+
+    <!-- Task Information Popup -->
+    <div id="view-task-info-popup" class="popup">
+        <div class="popup-header">
+            <h3 id="view-info-name">Task Details</h3>
+            <button type="button" class="close-popup-btn" data-popup-id="view-task-info-popup">&times;</button>
+        </div>
+        <div class="popup-body">
+            <p><strong>Detail:</strong> <span id="view-info-detail">N/A</span></p>
+            <p><strong>Status:</strong> <span id="view-info-status">N/A</span></p>
+            <p><strong>Limit Date:</strong> <span id="view-info-limit-date">N/A</span></p>
+            <p><strong>Scheduled Start:</strong> <span id="view-info-scheduled-start">N/A</span></p>
+            <p><strong>Scheduled End:</strong> <span id="view-info-scheduled-end">N/A</span></p>
+            <p><strong>Actual Start:</strong> <span id="view-info-actual-start">N/A</span></p>
+            <p><strong>Actual End:</strong> <span id="view-info-actual-end">N/A</span></p>
+            <div id="view-info-delete-reason-container" style="display: none;">
+                <p><strong>Delete Reason:</strong> <span id="view-info-delete-reason">N/A</span></p>
+            </div>
+            <p><small><strong>Created At:</strong> <span id="view-info-created-at">N/A</span></small></p>
+            <p><small><strong>Last Updated At:</strong> <span id="view-info-updated-at">N/A</span></small></p>
+        </div>
+        <div class="popup-footer">
+            <button type="button" id="close-view-info-popup-btn" data-popup-id="view-task-info-popup">Close</button>
+        </div>
+    </div>
+
     <script src="{{ url_for('static', filename='main.js') }}"></script></body>
 </html>
