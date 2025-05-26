@@ -714,6 +714,7 @@ document.addEventListener('DOMContentLoaded', function() {
             hideAddTaskPopup();
             hideEditTaskPopup();
             hideDeleteConfirmPopup();
+            hideViewTaskInfoPopup(); // Ensure view info popup is also hidden
         });
     }
 
