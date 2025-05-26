@@ -224,6 +224,10 @@ document.addEventListener('DOMContentLoaded', function() {
             on_click: function (task) {
                 showEditTaskPopupWithDetails(task.id);
             },
+            draggable: false, // Disable dragging tasks on the timeline
+            resizable: false, // Disable resizing task durations
+            // on_date_change: null, // Explicitly nullify if it was previously set and no longer needed
+            // on_progress_change: null, // Consider if progress dragging should also be disabled
         });
 
         // Add wheel event listener for zoom functionality if not already added
