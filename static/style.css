@@ -13,10 +13,10 @@
 /* Frappe Ganttによって#gantt-target内に生成されるSVG要素の高さ調整 */
 #gantt-target {
     min-height: 300px; /* 'height' を 'min-height' に変更 */
-    /* これから縦スクロールを#gantt-target自身に持たせるため、overflow-yはここで設定 */
+    height: 100%; /* 親の高さに合わせる */ /* ADDED: コメントアウトを解除 */
     overflow-x: auto; /* Enable horizontal scrollbar if Frappe Gantt's SVG content overflows */
-    
-    /* Other visual styles like background, padding, shadow are handled by Tailwind on #gantt-chart-area */
+    overflow-y: auto; /* ADDED: ガントチャート自体の縦スクロールを有効にする */
+    cursor: grab; /* NEW: ドラッグ開始前のカーソル */
 }
 
 #gantt-target svg {
@@ -24,7 +24,7 @@
      * distributing space evenly if there are fewer tasks.
      * Frappe Gantt typically scales its content within the SVG viewport.
      */
-    height: 100%;
+     height: 100%; /* ADDED: コメントアウトを解除し、親のサイズに合わせる */
 }
 
 /* ADDED: Styles for today's line */
@@ -120,13 +120,11 @@
     /* overflow-y: auto; */
 }
 
-/* MODIFIED: #gantt-targetに縦スクロールを追加 */
-#gantt-target {
-    min-height: 300px; /* 既存の設定 */
-    height: 100%; /* 親の高さに合わせる */
-    overflow-x: auto; /* 既存の横スクロール */
-    overflow-y: auto; /* ADDED: ガントチャート自体の縦スクロールを有効にする */
+/* MODIFIED: #gantt-targetの縦スクロール設定はそのまま、親のsvg高さ指定はコメントアウト */
+#gantt-target.is-dragging { /* NEW: ドラッグ中のカーソル */
+    cursor: grabbing;
 }
+
 
 /* ★★★ ADDED: 全ての li 要素の左ボーダーを初期状態で強制的にリセット ★★★ */
 /* これにより、意図しないデフォルトボーダーが効かないようにする */

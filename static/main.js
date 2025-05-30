@@ -50,8 +50,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentGanttInstance = null; 
     const ganttViewModes = ['Quarter Day', 'Half Day', 'Day', 'Week', 'Month']; // Order for zooming
 
-    // --- Helper Functions ---
 
+    // --- Helper Functions ---
     /**
      * Formats an ISO datetime string (or null) to a string suitable for date input (YYYY-MM-DD).
      * @param {string|null} isoString - The ISO datetime string from the backend.
@@ -228,7 +228,90 @@ document.addEventListener('DOMContentLoaded', function() {
     function hideDeleteConfirmPopup() { 
         hidePopup(deleteConfirmPopup);
     }
-    // --- End Popup Management ---
+
+    // --- ADDED: addTodayLineToGanttChart の定義をここへ移動（他のヘルパー関数と同様のレベル） ---
+    function addTodayLineToGanttChart() {
+        console.log("addTodayLineToGanttChart called.");
+
+        const svg = ganttTarget.querySelector('svg');
+        if (!svg || !currentGanttInstance) {
+            console.warn("SVG element or currentGanttInstance not ready for today line. Skipping.");
+            return;
+        }
+
+        const oldTodayLine = svg.querySelector('.today-line');
+        if (oldTodayLine) {
+            oldTodayLine.remove();
+            console.log("Removed old today line.");
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); 
+
+        let foundTodayX = -1;
+
+        const todayHighlightRect = svg.querySelector('.grid .today-highlight');
+        if (todayHighlightRect) {
+            foundTodayX = parseFloat(todayHighlightRect.getAttribute('x')) + (parseFloat(todayHighlightRect.getAttribute('width')) / 2);
+            console.log("Found today highlight rect. X:", foundTodayX);
+        } else {
+            if (currentGanttInstance.dates && currentGanttInstance.dates.length > 0) {
+                console.log("Inspecting currentGanttInstance.dates:", currentGanttInstance.dates); 
+                if (currentGanttInstance.dates[0] && typeof currentGanttInstance.dates[0].date !== 'undefined' && typeof currentGanttInstance.dates[0].x !== 'undefined') {
+                    console.log("First element test:", currentGanttInstance.dates[0].date, currentGanttInstance.dates[0].x); 
+                } else {
+                     console.warn("currentGanttInstance.dates elements might not have 'date' or 'x' properties as expected.");
+                }
+
+
+                let closestDateCol = null;
+                let minDiff = Infinity;
+                
+                for (const dateCol of currentGanttInstance.dates) {
+                    const dateObj = new Date(dateCol.date); 
+                    dateObj.setHours(0,0,0,0);
+                    const diff = Math.abs(dateObj.getTime() - today.getTime());
+
+                    if (dateObj <= today) { 
+                        if (diff < minDiff) {
+                            minDiff = diff;
+                            closestDateCol = dateCol;
+                        }
+                    } else if (dateObj.getTime() === today.getTime()) { 
+                        closestDateCol = dateCol;
+                        break;
+                    }
+                }
+                
+                if (closestDateCol) {
+                    const columnWidth = currentGanttInstance.options.column_width; 
+                    foundTodayX = closestDateCol.x + (columnWidth / 2);
+                    console.log("Calculated today line X using Frappe Gantt's internal dates:", foundTodayX);
+                } else {
+                    console.warn("Could not find internal date for today. Today line not drawn. (closestDateCol was null)");
+                }
+            } else {
+                console.warn("Frappe Gantt internal 'dates' property not accessible or empty. Today line not drawn.");
+            }
+        }
+
+        if (foundTodayX !== -1) {
+            const svgHeight = svg.clientHeight; 
+
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', foundTodayX);
+            line.setAttribute('y1', 0); 
+            line.setAttribute('x2', foundTodayX);
+            line.setAttribute('y2', svgHeight); 
+            line.classList.add('today-line'); 
+
+            svg.appendChild(line);
+            console.log("Today line successfully added at X:", foundTodayX);
+        } else {
+            console.error("Failed to calculate today line X coordinate across all view modes. Today line not drawn.");
+        }
+    }
+
 
     // --- Task Rendering Functions ---
     function renderTasks(tasks) {
@@ -258,7 +341,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         tasks.forEach(task => { 
             const li = document.createElement('li');
-            li.className = 'task-item flex items-center h-8 px-4 rounded-md bg-gray-50 hover:bg-gray-100 cursor-pointer transition-all duration-200 mb-2'; // border-l-4 を削除済み
+            li.className = 'task-item flex items-center h-8 px-4 rounded-md bg-gray-50 hover:bg-gray-100 cursor-pointer transition-all duration-200 mb-2';
             li.dataset.taskId = task.id; 
             li.id = `task-item-${task.id}`;
 
@@ -408,9 +491,6 @@ document.addEventListener('DOMContentLoaded', function() {
             custom_class: 'gantt-dummy-task' 
         });
 
-        // 削除: Ganttタスクの強制ソートを削除済み
-        // ganttTasks.sort((a, b) => new Date(a.start) - new Date(b.start)); 
-
         const actualVisibleTasks = tasks.filter(t => t.scheduled_start_date && t.scheduled_end_date);
         if (actualVisibleTasks.length === 0 && ganttTasks.filter(t => !t.id.startsWith('dummy-')).length === 0 ) {
             const noGanttMessage = document.createElement('p');
@@ -429,7 +509,7 @@ document.addEventListener('DOMContentLoaded', function() {
             bar_corner_radius: 3,
             arrow_curve: 5,
             padding: 18,
-            view_mode: 'Day', 
+            view_mode: 'Half Day', // MODIFY: 横スクロールを機能させるために'Half Day'に変更
             date_format: 'YYYY-MM-DD',
             custom_popup_html: null, 
             on_click: function (task) {
@@ -478,88 +558,63 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             ganttTarget.dataset.wheelListenerAdded = 'true'; 
         }
-    }
-    
-    function addTodayLineToGanttChart() {
-        console.log("addTodayLineToGanttChart called.");
 
-        const svg = ganttTarget.querySelector('svg');
-        if (!svg || !currentGanttInstance) {
-            console.warn("SVG element or currentGanttInstance not ready for today line. Skipping.");
-            return;
-        }
+        // --- NEW: マウスドラッグによる画面移動機能 ---
+        let isDragging = false;
+        let startX;
+        let startY;
+        let scrollLeft;
+        let scrollTop;
 
-        const oldTodayLine = svg.querySelector('.today-line');
-        if (oldTodayLine) {
-            oldTodayLine.remove();
-            console.log("Removed old today line.");
-        }
+        const ganttContainer = document.getElementById('gantt-target');
 
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); 
+        ganttContainer.addEventListener('mousedown', (e) => {
+            // 左クリック以外は無視
+            if (e.button !== 0) return;
 
-        let foundTodayX = -1;
-
-        const todayHighlightRect = svg.querySelector('.grid .today-highlight');
-        if (todayHighlightRect) {
-            foundTodayX = parseFloat(todayHighlightRect.getAttribute('x')) + (parseFloat(todayHighlightRect.getAttribute('width')) / 2);
-            console.log("Found today highlight rect. X:", foundTodayX);
-        } else {
-            if (currentGanttInstance.dates && currentGanttInstance.dates.length > 0) {
-                console.log("Inspecting currentGanttInstance.dates:", currentGanttInstance.dates); 
-                if (currentGanttInstance.dates[0] && typeof currentGanttInstance.dates[0].date !== 'undefined' && typeof currentGanttInstance.dates[0].x !== 'undefined') {
-                    console.log("First element test:", currentGanttInstance.dates[0].date, currentGanttInstance.dates[0].x); 
-                } else {
-                     console.warn("currentGanttInstance.dates elements might not have 'date' or 'x' properties as expected.");
-                }
-
-
-                let closestDateCol = null;
-                let minDiff = Infinity;
-                
-                for (const dateCol of currentGanttInstance.dates) {
-                    const dateObj = new Date(dateCol.date); 
-                    dateObj.setHours(0,0,0,0);
-                    const diff = Math.abs(dateObj.getTime() - today.getTime());
-
-                    if (dateObj <= today) { 
-                        if (diff < minDiff) {
-                            minDiff = diff;
-                            closestDateCol = dateCol;
-                        }
-                    } else if (dateObj.getTime() === today.getTime()) { 
-                        closestDateCol = dateCol;
-                        break;
-                    }
-                }
-                
-                if (closestDateCol) {
-                    const columnWidth = currentGanttInstance.options.column_width; 
-                    foundTodayX = closestDateCol.x + (columnWidth / 2);
-                    console.log("Calculated today line X using Frappe Gantt's internal dates:", foundTodayX);
-                } else {
-                    console.warn("Could not find internal date for today. Today line not drawn. (closestDateCol was null)");
-                }
-            } else {
-                console.warn("Frappe Gantt internal 'dates' property not accessible or empty. Today line not drawn.");
+            // Frappe Ganttのバーやテキスト要素上でなければドラッグ開始
+            // これらの要素上でのクリックやドラッグはFrappe Gantt本来の機能を優先する
+            const targetClassList = e.target.classList;
+            if (targetClassList.contains('bar') ||       // バー本体
+                targetClassList.contains('bar-progress') || // 進捗バー
+                targetClassList.contains('bar-label') ||    // バーのラベル
+                targetClassList.contains('date') ||         // ヘッダーの日付
+                targetClassList.contains('handle') ||       // リサイズハンドル
+                e.target.tagName === 'text'             // SVG内のテキスト要素全般
+            ) {
+                isDragging = false; // Frappe Gantt自身のイベントを優先
+                return;
             }
-        }
 
-        if (foundTodayX !== -1) {
-            const svgHeight = svg.clientHeight; 
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            scrollLeft = ganttContainer.scrollLeft;
+            scrollTop = ganttContainer.scrollTop;
+            ganttContainer.classList.add('is-dragging'); // カーソル変更用クラス
+            e.preventDefault(); // テキスト選択などを防ぐ
+        });
 
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttribute('x1', foundTodayX);
-            line.setAttribute('y1', 0); 
-            line.setAttribute('x2', foundTodayX);
-            line.setAttribute('y2', svgHeight); 
-            line.classList.add('today-line'); 
+        ganttContainer.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
 
-            svg.appendChild(line);
-            console.log("Today line successfully added at X:", foundTodayX);
-        } else {
-            console.error("Failed to calculate today line X coordinate across all view modes. Today line not drawn.");
-        }
+            e.preventDefault(); // これがないとドラッグ中に要素が選択されたりする
+
+            const x = e.clientX - startX;
+            const y = e.clientY - startY;
+
+            ganttContainer.scrollLeft = scrollLeft - x;
+            ganttContainer.scrollTop = scrollTop - y;
+        });
+
+        // mouseup は document 全体で監視し、ganttTarget 外でマウスを離してもドラッグを停止させる
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                ganttContainer.classList.remove('is-dragging');
+            }
+        });
+        // --- NEW: マウスドラッグによる画面移動機能 終わり ---
     }
     
     function renderCompletedTasks(tasks) {
@@ -710,18 +765,18 @@ document.addEventListener('DOMContentLoaded', function() {
                             if (!sortResponse.ok) {
                                 const err = await sortResponse.json();
                                 console.error('Failed to update task order:', err.error);
-                                fetchAndRenderActiveTasks(); 
+                                fetchAndRenderActiveTasks(sortBy); // 変更: 元のソート順を維持して再フェッチ
                                 alert(`Error updating task order: ${err.error || 'Server error'}`);
                             } else {
                                 console.log('Task order updated successfully.');
                                 if (sortBy !== 'display_order') { 
                                     // 別のソート順で表示していた場合は、display_orderに戻す
-                                    fetchAndRenderActiveTasks('display_order'); 
+                                    fetchAndRenderActiveTasks(sortBy); // 変更: 元のソート順を維持して再フェッチ
                                 }
                             }
                         } catch (error) {
                             console.error('Error sending task order:', error);
-                            fetchAndRenderActiveTasks(); 
+                            fetchAndRenderActiveTasks(sortBy); // 変更: 元のソート順を維持して再フェッチ
                             alert('Error sending task order to server.');
                         }
                     },
@@ -749,7 +804,7 @@ document.addEventListener('DOMContentLoaded', function() {
             renderCompletedTasks(tasks);
         } catch (error) {
             console.error('Error fetching completed tasks:', error);
-            completedTasksListArea.innerHTML = `<p class="text-red-600">Error loading completed tasks: ${error.message}</pмещение`; 
+            completedTasksListArea.innerHTML = `<p class="text-red-600">Error loading completed tasks: ${error.message}</p>`; 
         }
     }
 
@@ -780,7 +835,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let scheduled_end_date = document.getElementById('task-scheduled-end-date').value;
 
         if ((scheduled_start_date && !scheduled_end_date) || (!scheduled_start_date && scheduled_end_date)) { 
-            addErrorMessageDiv.textContent = 'の両方の日時が提供されなければなりません。';
+            addErrorMessageDiv.textContent = 'Both scheduled start and end dates must be provided if one is present.';
             return;
         }
 
@@ -808,7 +863,7 @@ document.addEventListener('DOMContentLoaded', function() {
             fetchAndRenderActiveTasks(); 
         } catch (error) {
             console.error('Error adding task:', error);
-            addErrorMessageDiv.textContent = `Error: ${error.error || '予期せぬエラーが発生しました。'}`;
+            addErrorMessageDiv.textContent = `Error: ${error.error || 'An unexpected error occurred.'}`;
         }
     });
 
@@ -824,7 +879,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let scheduled_end_date = document.getElementById('edit-task-scheduled-end-date').value;
 
         if ((scheduled_start_date && !scheduled_end_date) || (!scheduled_start_date && scheduled_end_date)) {
-            editErrorMessageDiv.textContent = '両方のスケジュール開始日と終了日が提供されなければなりません。';
+            editErrorMessageDiv.textContent = 'Both scheduled start and end dates must be provided if one is present.';
             return;
         }
         
@@ -852,7 +907,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         catch (error) {
             console.error('Error updating task:', error);
-            editErrorMessageDiv.textContent = `Error: ${error.error || '予期せぬエラーが発生しました。'}`;
+            editErrorMessageDiv.textContent = `Error: ${error.error || 'An unexpected error occurred.'}`;
         }
     });
 
@@ -877,7 +932,7 @@ document.addEventListener('DOMContentLoaded', function() {
             fetchAndRenderDeletedTasks(); 
         } catch (error) {
             console.error('Error deleting task:', error);
-            deleteConfirmErrorMessageDiv.textContent = `Error: ${error.error || '予期せぬエラーが発生しました。'}`;
+            deleteConfirmErrorMessageDiv.textContent = `Error: ${error.error || 'An unexpected error occurred.'}`;
         }
     });
     
@@ -905,7 +960,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 fetchAndRenderDeletedTasks(); 
             } catch (error) {
                 console.error('Error restoring task:', error);
-                alert(`Error restoring task: ${error.error || '予期せぬエラーが発生しました。'}`);
+                alert(`Error restoring task: ${error.error || 'An unexpected error occurred.'}`);
             }
         }
     }
@@ -947,7 +1002,7 @@ document.addEventListener('DOMContentLoaded', function() {
             fetchAndRenderActiveTasks(); 
         } catch (error) {
             console.error('Error during start/stop task:', error);
-            editErrorMessageDiv.textContent = `Error: ${error.error || '予期せぬエラーが発生しました。'}`;
+            editErrorMessageDiv.textContent = `Error: ${error.error || 'An unexpected error occurred.'}`;
         }
     }
 
@@ -1000,7 +1055,7 @@ document.addEventListener('DOMContentLoaded', function() {
             fetchAndRenderCompletedTasks(); 
         } catch (error) { 
             console.error('Error ending task:', error);
-            editErrorMessageDiv.textContent = `Error: ${error.error || '予期せぬエラーが発生しました。'}`;
+            editErrorMessageDiv.textContent = `Error: ${error.error || 'An unexpected error occurred.'}`;
         }
     });
     
