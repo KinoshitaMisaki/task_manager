@@ -589,7 +589,7 @@ document.addEventListener('DOMContentLoaded', function() {
             li.appendChild(textSpan);
             li.appendChild(restoreBtn);
             ul.appendChild(li);
-
+            
             li.addEventListener('click', async (event) => {
                 if (!event.target.classList.contains('restore-btn')) {
                     showViewTaskDetailsPopupWithDetails(task.id);
@@ -749,7 +749,7 @@ document.addEventListener('DOMContentLoaded', function() {
             renderCompletedTasks(tasks);
         } catch (error) {
             console.error('Error fetching completed tasks:', error);
-            completedTasksListArea.innerHTML = `<p class="text-red-600">Error loading completed tasks: ${error.message}</pмещение`; 
+            completedTasksListArea.innerHTML = `<p class="text-red-600">Error loading completed tasks: ${error.message}</p> помещение`; 
         }
     }
 
@@ -938,7 +938,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             console.log(successMessage);
             // 内部のtaskDetailsを更新 (Edit Popupの状態を反映)
-            if (currentEditTaskDetails && currentEditTaskDetails.id == taskId) {
+            if (currentEditTaskDetails && currentEditTaskDetails.id == taskId) { // ★修正済みの箇所★
                 currentEditTaskDetails.actual_start_date = data.actual_start_date !== undefined ? data.actual_start_date : currentEditTaskDetails.actual_start_date;
                 currentEditTaskDetails.actual_end_date = data.actual_end_date !== undefined ? data.actual_end_date : null; // Pauseの場合はクリアされる可能性
                 currentEditTaskDetails.status = data.status; 
