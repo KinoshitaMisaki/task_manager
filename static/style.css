@@ -12,8 +12,10 @@
 /* Custom Styles for Frappe Gantt */
 /* Frappe Ganttによって#gantt-target内に生成されるSVG要素の高さ調整 */
 #gantt-target {
-    min-height: 350px; /* 'height' を 'min-height' に変更 */
+    min-height: 300px; /* 'height' を 'min-height' に変更 */
+    /* これから縦スクロールを#gantt-target自身に持たせるため、overflow-yはここで設定 */
     overflow-x: auto; /* Enable horizontal scrollbar if Frappe Gantt's SVG content overflows */
+    
     /* Other visual styles like background, padding, shadow are handled by Tailwind on #gantt-chart-area */
 }
 
@@ -106,11 +108,24 @@
 #task-list-area {
     flex: 2 1 0% !important; /* flex-grow: 2, flex-shrink: 1, flex-basis: 0% */
     min-width: 0 !important; /* Ensures shrinking */
+    max-height: 400px; /* ADDED: 固定高さを設定 (例) */
+    overflow-y: auto;  /* ADDED: 縦スクロールバーを有効にする */
 }
 
 #gantt-chart-area {
     flex: 3 1 0% !important; /* flex-grow: 3, flex-shrink: 1, flex-basis: 0% */
     min-width: 0 !important; /* Ensures shrinking */
+    max-height: 400px; /* task-list-area と同じ高さに揃える */
+    /* REMOVED: 外側のスクロールバーを削除するため、ここからoverflow-y: auto;を削除 */
+    /* overflow-y: auto; */
+}
+
+/* MODIFIED: #gantt-targetに縦スクロールを追加 */
+#gantt-target {
+    min-height: 300px; /* 既存の設定 */
+    height: 100%; /* 親の高さに合わせる */
+    overflow-x: auto; /* 既存の横スクロール */
+    overflow-y: auto; /* ADDED: ガントチャート自体の縦スクロールを有効にする */
 }
 
 /* ★★★ ADDED: 全ての li 要素の左ボーダーを初期状態で強制的にリセット ★★★ */
@@ -146,5 +161,5 @@
     /* border-left-color: rgb(34, 197, 94) !important; */
 
     /* box-shadow を使ってタスクカード全体を囲む緑色の枠線を追加 */
-    box-shadow: 0 0 0 4px rgb(34, 197, 94) !important; /* 0オフセット、0ぼかし、2pxのスプレッド、緑色 */
+    box-shadow: 0 0 0 4px rgb(34, 197, 94) !important; /* 0オフセット、0ぼかし、4pxのスプレッド、緑色 (ユーザーが採用した値) */
 }
