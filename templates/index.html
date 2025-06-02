@@ -25,7 +25,7 @@
     <div class="main-container container mx-auto px-4 py-8">
         <!-- Upper Area: Contains task list and Gantt chart -->
         <div id="upper-area" class="flex flex-col md:flex-row gap-6 mb-8 w-full md:w-11/12 mx-auto"> 
-            <div id="task-list-area" class="bg-white p-6 rounded-lg shadow-md">
+            <div id="task-list-area" class="bg-white p-6 rounded-lg shadow-md min-h-[505px] overflow-y-auto">
                 <h2 class="text-xl font-semibold mb-4 text-gray-700">Active Tasks</h2>
                 <ul id="active-tasks-ul" class="task-list">
                     <!-- Task list will be populated here by main.js -->
@@ -41,7 +41,7 @@
         <!-- Lower Area (Main Container) -->
         <div id="lower-area" class="flex flex-col md:flex-row gap-6 w-full md:w-11/12 mx-auto">
             <!-- Bottom-Left Area -->
-            <div id="completed-tasks-container" class="flex-1 bg-white p-6 rounded-lg shadow-md">
+            <div id="completed-tasks-container" class="flex-1 bg-white p-6 rounded-lg shadow-md h-[250px] overflow-y-auto">
                 <h2 class="text-xl font-semibold mb-4 text-gray-700">終了したタスク (Completed Tasks)</h2>
                 <div id="completed-tasks-list">
                     <!-- Completed tasks will be listed here -->
@@ -49,7 +49,7 @@
             </div>
 
             <!-- Bottom-Right Area -->
-            <div id="deleted-tasks-container" class="flex-1 bg-white p-6 rounded-lg shadow-md">
+            <div id="deleted-tasks-container" class="flex-1 bg-white p-6 rounded-lg shadow-md h-[250px] overflow-y-auto">
                 <h2 class="text-xl font-semibold mb-4 text-gray-700">削除したタスク (Deleted Tasks)</h2>
                 <div id="deleted-tasks-list">
                     <!-- Deleted tasks will be listed here -->
